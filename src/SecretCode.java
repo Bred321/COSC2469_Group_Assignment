@@ -1,3 +1,4 @@
+
 public class SecretCode {
   private String correctCode;
   private long counter;
@@ -20,11 +21,11 @@ public class SecretCode {
        return -1;
       }
     }
-
+    // length comparison
     if (guessedCode.length() != correctCode.length()) {
       return -2;
     }
-    
+    // content comparison
     int matched = 0;
     for(int i=0; i < correctCode.length(); i++){
       if(guessedCode.charAt(i) == correctCode.charAt(i)){
