@@ -3,14 +3,24 @@ public class SecretCodeGuesser {
     // brute force secret code guessing
     SecretCode code = new SecretCode();
     int correctLength = -1; // track correct key length
-    
-    // First, find correct length by brute-force
-    // Time complexity: O(N)
-    for (int length = 1; length <= 20; length++) {
-      String candidate = "B".repeat(length);
-      int result = code.guess(candidate);
-      if (result != -2) { // not a "wrong length" response
-        correctLength = length;
+    int MAX_LENGTH = 18;
+
+    // Approarch: two‑ends (optimised: check left, then right)
+    for(int length = 1; length <= MAX_LENGTH / 2; length++){
+      int leftLength = length;
+      int rightLength = MAX_LENGTH - length;
+      String leftCandidate = "B".repeat(leftLength);
+      String rightCadidate = "B".repeat(rightLength);
+
+      int leftResult = code.guess(leftCandidate);
+      if(leftResult != -2){
+        correctLength = leftLength;
+        break;
+      }
+
+      int rightResult = code.guess(rightCadidate);
+      if(rightResult != -2){
+        correctLength = rightLength;
         break;
       }
     }
@@ -70,6 +80,6 @@ public class SecretCodeGuesser {
       }
       curr[i] = 'B';
     }
-    return String.valueOf(curr); // convert all char types into String and return
+    return String.valueOf(curr);
   }  
 }
