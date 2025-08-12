@@ -1,4 +1,3 @@
-
 public class SecretCode {
   private String correctCode;
   private long counter;
