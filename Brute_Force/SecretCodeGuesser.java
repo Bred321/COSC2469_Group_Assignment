@@ -1,74 +1,96 @@
 public class SecretCodeGuesser {
   public void start() {
-    // brute force secret code guessing
-    SecretCode code = new SecretCode();
-    int correctLength = -1; // track correct key length
-    
-    // First, find correct length by brute-force
-    for (int length = 1; length <= 20; length++) {
-      String candidate = "B".repeat(length);
-      int result = code.guess(candidate);
-      if (result != -2) { // not a "wrong length" response
-        correctLength = length;
-        break;
+      char[] letters = {'B', 'A', 'C', 'X', 'I', 'U'};
+      int[] freq = new int[letters.length];
+      SecretCode code = new SecretCode();
+      int correctLength = -1; 
+
+      // 1. Find correct length
+      for (int length = 20; length > 0 ; length--) {
+          String candidate = "B".repeat(length);
+          int result = code.guess(candidate);
+          freq[0] = result;
+        
+          if (result != -2) {
+              correctLength = length;
+              if (result == length) { // Solved in length check
+                  System.out.println("I found the secret code. It is " + candidate);
+                  return;
+              }
+              break;
+          }
       }
-    }
 
-    if (correctLength == -1) {
-      System.out.println("Failed to determine secret code length.");
-      return;
-    }
-
-    // brute force key guessing
-    String str = "B".repeat(correctLength); // use discovered length
-    while (code.guess(str) != correctLength) {
-      str = next(str);
-    }
-    System.out.println("I found the secret code. It is " + str);
-  }
-
-  static int order(char c) {
-    if (c == 'B') {
-      return 0;
-    } else if (c == 'A') {
-      return 1;
-    } else if (c == 'C') {
-      return 2;
-    } else if (c == 'X') {
-      return 3;
-    } else if (c == 'I') {
-      return 4;
-    } 
-    return 5;
-  }
-
-  static char charOf(int order) {
-    if (order == 0) {
-      return 'B';
-    } else if (order == 1) {
-      return 'A';
-    } else if (order == 2) {
-      return 'C';
-    } else if (order == 3) {
-      return 'X';
-    } else if (order == 4) {
-      return 'I';
-    } 
-    return 'U';
-  }
-
-  // return the next value in 'BACXIU' order, that is
-  // B < A < C < X < I < U
-  public String next(String current) {
-    char[] curr = current.toCharArray();
-    for (int i = curr.length - 1; i >=0; i--) {
-      if (order(curr[i]) < 5) {
-        // increase this one and stop
-        curr[i] = charOf(order(curr[i]) + 1);
-        break;
+      if (correctLength == -1) {
+          System.out.println("Failed to determine secret code length.");
+          return;
       }
-      curr[i] = 'B';
-    }
-    return String.valueOf(curr);
-  }  
+
+      // 2. Frequency check
+      freq[letters.length-1] = correctLength - freq[0];
+      for (int i = 1; i < letters.length - 1; i++) {
+          String guess = String.valueOf(letters[i]).repeat(correctLength);
+          freq[i] = code.guess(guess);
+          freq[letters.length-1] -= freq[i];
+          if (freq[i] == correctLength) { // Found full match
+              System.out.println("I found the secret code. It is " + guess);
+              return;
+          }
+          
+      }
+      
+
+      // Find letter with max frequency
+      int maxIndex = 0;
+      for (int i = 1; i < freq.length; i++) {
+          if (freq[i] > freq[maxIndex]) {
+              maxIndex = i;
+          }
+      }
+
+      // 3. Start with the most frequent letter
+      char[] guessArray = new char[correctLength];
+      for (int i = 0; i < correctLength; i++) {
+          guessArray[i] = letters[maxIndex];
+      }
+      int currentScore = freq[maxIndex];
+  
+      // 4. Replace only positions not matching yet
+      for (int pos = 0; pos < correctLength; pos++) {
+          if (currentScore == correctLength) break; // Done early
+          for (char letter : letters) {
+              
+              if (letter == letters[maxIndex]) continue; // Skip baseline letter
+
+              if(freq[indexOf(letters,letter)] != 0){
+                  char old = guessArray[pos];
+                  guessArray[pos] = letter;
+                  int newScore = code.guess(new String(guessArray));
+                  if (newScore > currentScore) {
+                      freq[indexOf(letters,letter)] = freq[indexOf(letters,letter)] - 1;
+                      currentScore = newScore;
+                      break;
+                  } else {
+                      guessArray[pos] = old;
+                  }
+              }
+              else{
+                  continue;
+              }
+          }
+      }
+
+      // 5. Output result
+      System.out.println("I found the secret code. It is " + new String(guessArray));
+
+  }
+  // Support method to get index in array
+  public static int indexOf(char[] arr, char target) {
+      for (int i = 0; i < arr.length; i++) {
+          if (arr[i] == target) {
+              return i; // return the index
+          }
+      }
+      return -1;
+  }
 }
