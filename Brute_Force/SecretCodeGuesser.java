@@ -1,14 +1,15 @@
 public class SecretCodeGuesser {
+  private static final char[] CHARS = {'B','A','C','X','I','U'};
+
   public void start() {
     // brute force secret code guessing
     SecretCode code = new SecretCode();
     int correctLength = -1; // track correct key length
-    
-    // First, find correct length by brute-force
+
     for (int length = 1; length <= 20; length++) {
       String candidate = "B".repeat(length);
       int result = code.guess(candidate);
-      if (result != -2) { // not a "wrong length" response
+      if (result != -2) {
         correctLength = length;
         break;
       }
@@ -19,56 +20,38 @@ public class SecretCodeGuesser {
       return;
     }
 
-    // brute force key guessing
-    String str = "B".repeat(correctLength); // use discovered length
-    while (code.guess(str) != correctLength) {
-      str = next(str);
-    }
-    System.out.println("I found the secret code. It is " + str);
-  }
+    char[] guess = new char[correctLength];
+    for (int i = 0; i < correctLength; i++) guess[i] = 'B';
 
-  static int order(char c) {
-    if (c == 'B') {
-      return 0;
-    } else if (c == 'A') {
-      return 1;
-    } else if (c == 'C') {
-      return 2;
-    } else if (c == 'X') {
-      return 3;
-    } else if (c == 'I') {
-      return 4;
-    } 
-    return 5;
-  }
+    int matched = code.guess(new String(guess));
 
-  static char charOf(int order) {
-    if (order == 0) {
-      return 'B';
-    } else if (order == 1) {
-      return 'A';
-    } else if (order == 2) {
-      return 'C';
-    } else if (order == 3) {
-      return 'X';
-    } else if (order == 4) {
-      return 'I';
-    } 
-    return 'U';
-  }
+    /* Try each possible char at the pos instead of every combination
+     * Complexity:
+     * Worst-case here: 20(L) * 6(chars) = 120 guesses
+     */
+    for (int pos = 0; pos < correctLength; pos++) {
+      char keep = guess[pos]; // current char at this position
+      for (char c : CHARS) {
+        if (c == keep) continue;
 
-  // return the next value in 'BACXIU' order, that is
-  // B < A < C < X < I < U
-  public String next(String current) {
-    char[] curr = current.toCharArray();
-    for (int i = curr.length - 1; i >=0; i--) {
-      if (order(curr[i]) < 5) {
-        // increase this one and stop
-        curr[i] = charOf(order(curr[i]) + 1);
-        break;
+        guess[pos] = c;
+        int r = code.guess(new String(guess));
+
+        if (r > matched) { // correct char so matched +1
+          matched = r;
+          keep = c;
+          break; // move to next position immediately
+        } else {
+          guess[pos] = keep; // revert (Not likely, delete later)
+        }
       }
-      curr[i] = 'B';
     }
-    return String.valueOf(curr);
-  }  
+
+    System.out.println("I found the secret code: " + new String(guess));
+  }
+
 }
+
+/* Worst Case:
+   Best Case: BBBBBBBBBBBBBBBBBBBB (20xB) so only 21 guess for length and each char (Bug with println)
+ */
